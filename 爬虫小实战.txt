@@ -1,0 +1,199 @@
+下载音乐到本地：
+import requests
+url = "http://ring.itools.cn"
+html = requests.get(url)
+soup = BS(html.text)
+# songnames = soup.select('.sound h2')
+#或者是：
+songnames = soup.find_all('h2')
+# playaddrs = soup.select('.sound_play')or the next code
+playaddrs = soup.find_all("a",{"class":"sound_play play"})
+for songname,playaddr in zip(songnames,playaddrs):
+    data = {
+        "songname":songname.text,
+        "playaddr":playaddr.get("lurl")
+    }
+    # print(data["songname"],data["playaddr"])
+    html = requests.get(data["playaddr"])
+    f = open("D:/3/"+data["songname"],"wb")
+    f.write(html.content)
+    f.close()
+
+
+下载书名到本地：
+
+# res = urlre.urlopen('http://www.douban.com/tag/%E5%B0%8F%E8%AF%B4/?focus=book')
+# soup = BS(res,'lxml')
+# book_div = soup.find(attrs={"id":"book"})
+# book_a = book_div.findAll(attrs={"class":"title"})
+# for book in book_a:
+#     print(book.string)
+#
+
+下载妹子图片到本地：
+
+import re
+import urllib.request
+import requests
+from bs4 import BeautifulSoup as BS
+url = 'http://www.mzitu.com/26685'
+header = {
+    'User-Agent':'Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1)',
+    'Referer':'http://www.mzitu.com'
+               }
+# header = {
+#     "User-Agent":'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 UBrowser/6.1.2107.204 Safari/537.36'
+#
+# }
+
+html = requests.get(url,header)
+# print(html.text)
+
+soup = BS(html.text,'html.parser')
+
+# all_a = soup.find('div',{"class":"postlist"}).find_all('a',target="_blank")
+# for a in all_a:
+#     title = a.get_text()
+#     print(title)
+
+pic_max = soup.find_all('span')[10].text
+print(pic_max)
+
+#找标题
+title = soup.find('h2',{"class":"main-title"}).text
+
+#输出每个图片页面的网址
+for i in range(1,int(pic_max) + 1):
+    href = url + '/' + str(i)
+    html = requests.get(href,headers=header)
+    mess = BS(html.text,'html.parser')
+
+    #图片地址在img标签alt属性和标题一样的地方
+    pic_url = mess.find('img',alt=title)
+    html = requests.get(pic_url['src'],headers=header)
+
+    #获取图片的名字方便命名
+    file_name = pic_url['src'].split(r'/')[-1]
+
+    #图片不是文本文件，以二进制的格式写入，所以是html.content
+    f = open('D:/2/'+file_name,'wb')
+    f.write(html.content)
+    f.close()
+
+
+#爬取一个章节的内容，并将汉字写入到本地
+import requests
+import codecs
+from bs4 import BeautifulSoup as BS
+import lxml
+url = "http://www.136book.com/huaqiangu/ebxeew/"
+html = requests.get(url)
+soup = BS(html.text,'lxml')
+tag_div = soup.find("div",id="content")
+tag_script = tag_div.script.extract()
+print((tag_div.get_text()))
+with codecs.open("D:/1/1.txt","w","utf-16") as f:
+    f.write(tag_div.get_text())
+    f.close()
+
+
+#爬取花千骨全部章节内容
+
+import requests
+import codecs
+from bs4 import BeautifulSoup as BS
+import lxml
+url = "http://www.136book.com/huaqiangu/"
+html = requests.get(url)
+soup = BS(html.text,'lxml')
+dic_chapter = {}
+tag_div = soup.find("div",{"id":"book_detail","class":"box1"}).find_next("div")
+tag_li = tag_div.find_all("li")
+for link in tag_li:
+    name = link.string
+    dic_chapter[name] = link.a.get("href")
+
+    url_chp = dic_chapter[name]
+    html = requests.get(url_chp)
+    soup = BS(html.text,'lxml')
+    tag_div = soup.find("div",id="content")
+    # print(tag_div)
+    try:
+        tag_script = tag_div.script.extract()
+    except AttributeError:
+        print(link.a.get("href"))
+    else:
+        # print((tag_div.get_text()))
+        with codecs.open("D:/1/2.txt","a","utf-16") as f:
+            f.write("\r\n\r\n\r\n")
+            f.write(name)
+            f.write("\r\n\r\n\r\n")
+            f.write(tag_div.get_text())
+            f.close()
+
+
+电视猫剧集简介下载
+
+url = "https://www.tvmao.com/drama/LjIlMWE=/episode/11-35"
+for i in range(35,48):
+
+    global url
+    header = {
+        'User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.117 Safari/537.36',
+        # 'Referer':'http://www.mzitu.com'
+                   }
+    html = requests.get(url,headers=header)
+
+    soup = BS(html.text,'lxml')
+    page = soup.find("a",{"class":"epino_btn"}).find_next("a").find_next("a")
+    print(page.get("href"))
+    url = "https://www.tvmao.com" + page.get("href")
+    title = soup.find("h2")
+    article = soup.find("article",{"class":"clear epi_c"})
+    with codecs.open("D:/1/远大前程.txt","a","utf-16") as f:
+        f.write("\r\n\r\n\r\n")
+        f.write(title.get_text())
+        f.write("\r\n\r\n\r\n")
+        f.write(article.get_text())
+        f.close()
+
+#天猫下载评论
+
+#https://mp.weixin.qq.com/s/oO46GdmGeDdYGvW3B75qsg 教程链接
+import requests
+import codecs
+import re
+from bs4 import BeautifulSoup as BS
+import lxml
+import csv
+urls = []
+for i in list(range(1,11)):
+    urls.append("https://rate.tmall.com/list_detail_rate."
+                "htm?itemId=539696221085&spuId=705882082&sellerId=1675299352&order=3&currentPage={}".format(i))
+
+nickname = []
+ratedate = []
+color = []
+size = []
+ratecontent = []
+for url in urls:
+    content = requests.get(url).text
+    nickname.extend(re.findall('"displayUserNick":"(.*?)"',content))
+    color.extend(re.findall(re.compile('颜色分类:(.*?);'),content))
+    size.extend(re.findall(re.compile("尺码:(.*?),"),content))
+    ratecontent.extend(re.findall(re.compile('"rateContent":"(.*?)","rateDate"'),content))
+    ratedate.extend(re.findall(re.compile('"rateDate":"(.*?)","reply"'),content))
+# print(nickname, color, ratecontent)
+print(len(size),len(nickname),len(color),len(ratecontent),len(ratedate))
+
+
+file = open("D:/南极人评价.csv","w")
+# file.write(','.join("nickname","ratedate","color","size","ratecontent")+'\n')
+# writer = csv.writer(file)
+# writer.writerow(["nickname","ratedate","color","size","ratecontent"])
+for i in list(range(len(size))):
+    file.write(','.join((nickname[i],ratedate[i],color[i],size[i],ratecontent[i]))+"\n")
+file.close()
+
+
+
